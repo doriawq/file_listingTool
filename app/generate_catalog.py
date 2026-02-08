@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -94,9 +95,15 @@ def build_docx(rows, out_path: Path, root: Path, title: str | None = None):
     doc.save(out_path)
 
 
+def base_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent.parent
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="Generate file catalogs in Excel and Word formats.")
-    default_root = "/Users/Doria/Desktop/AI_projects/file_listingTool/targets"
+    default_root = str(base_dir() / "targets")
     p.add_argument(
         "--root",
         default=default_root,
@@ -133,23 +140,42 @@ def parse_args():
 
 def main():
     args = parse_args()
-    root = Path(args.root).resolve()
+    run_catalog(
+        root=args.root,
+        out_xlsx=args.out_xlsx,
+        out_docx=args.out_docx,
+        include_hidden=args.include_hidden,
+        exclude=args.exclude,
+        title=args.title,
+    )
 
-    exclude = {root / Path(p) for p in args.exclude}
+
+def run_catalog(
+    *,
+    root: str,
+    out_xlsx: str,
+    out_docx: str,
+    include_hidden: bool = False,
+    exclude: list[str] | None = None,
+    title: str = "",
+):
+    root_path = Path(root).resolve()
+
+    exclude_set = {root_path / Path(p) for p in (exclude or [])}
     # Always exclude output and tmp by default unless user explicitly includes them
-    exclude.update({root / "output", root / "tmp"})
+    exclude_set.update({root_path / "output", root_path / "tmp"})
 
     file_rows = []
-    for rel in iter_files(root, args.include_hidden, exclude):
+    for rel in iter_files(root_path, include_hidden, exclude_set):
         file_rows.append((rel.stem,))
 
     file_rows.sort(key=lambda x: x[0].lower())
 
-    build_excel(file_rows, Path(args.out_xlsx))
-    build_docx(file_rows, Path(args.out_docx), root, title=args.title)
+    build_excel(file_rows, Path(out_xlsx))
+    build_docx(file_rows, Path(out_docx), root_path, title=title)
 
-    print(f"Excel catalog: {Path(args.out_xlsx).resolve()}")
-    print(f"Word catalog:  {Path(args.out_docx).resolve()}")
+    print(f"Excel catalog: {Path(out_xlsx).resolve()}")
+    print(f"Word catalog:  {Path(out_docx).resolve()}")
     print(f"Total files:   {len(file_rows)}")
 
 

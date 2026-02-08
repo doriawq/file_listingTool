@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox
 
-BASE_DIR = Path("/Users/Doria/Desktop/AI_projects/file_listingTool")
+if getattr(sys, "frozen", False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
 TARGETS_DIR = BASE_DIR / "targets"
-BIN = BASE_DIR / "dist" / "file_listing"
-SCRIPT = BASE_DIR / "generate_catalog.py"
+
+from generate_catalog import run_catalog
 name_var = None
 
 
@@ -58,22 +59,18 @@ def generate_catalog():
             out_xlsx = str(TARGETS_DIR / "output" / "spreadsheet" / f"{name}.xlsx")
             out_docx = str(TARGETS_DIR / "output" / "doc" / f"{name}.docx")
 
-    if BIN.exists() and os.access(BIN, os.X_OK):
-        cmd = [str(BIN)]
-    else:
-        cmd = [sys.executable, str(SCRIPT)]
-
-    if out_xlsx and out_docx:
-        cmd.extend(["--out-xlsx", out_xlsx, "--out-docx", out_docx])
-    if name:
-        cmd.extend(["--title", name])
-
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        messagebox.showinfo("Done", result.stdout.strip() or "Catalog generated.")
-    except subprocess.CalledProcessError as exc:
-        output = (exc.stdout or "") + "\n" + (exc.stderr or "")
-        messagebox.showerror("Error", output.strip() or "Failed to generate catalog.")
+        run_catalog(
+            root=str(TARGETS_DIR),
+            out_xlsx=out_xlsx or str(TARGETS_DIR / "output" / "spreadsheet" / "file_catalog.xlsx"),
+            out_docx=out_docx or str(TARGETS_DIR / "output" / "doc" / "file_catalog.docx"),
+            include_hidden=False,
+            exclude=[],
+            title=name,
+        )
+        messagebox.showinfo("Done", "Catalog generated.")
+    except Exception as exc:
+        messagebox.showerror("Error", str(exc) or "Failed to generate catalog.")
 
 
 def main():

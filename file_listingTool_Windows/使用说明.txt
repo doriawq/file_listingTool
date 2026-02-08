@@ -1,0 +1,11 @@
+文件目录生成器（Windows）使用说明
+
+1. 把需要生成目录的文件放入 targets 文件夹。
+2. 双击运行 file_listingTool_Windows_GUI.exe。
+3. 生成结果在 targets\output\ 下：
+   - Excel：targets\output\spreadsheet\file_catalog.xlsx
+   - Word：targets\output\doc\file_catalog.docx
+
+注意：
+- 如果你看到“无法打开”提示，请右键 exe -> 属性 -> 解除阻止（或“允许”），再运行。
+- 目录名称可在界面输入框中填写，生成文件会按输入名称命名。
