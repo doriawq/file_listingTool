@@ -3,7 +3,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = Resolve-Path (Join-Path $root "..\..")
+$projectRoot = Resolve-Path (Join-Path $root "..\")
 Set-Location $projectRoot
 
 # Build GUI executable
