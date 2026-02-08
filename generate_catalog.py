@@ -41,58 +41,54 @@ def build_excel(rows, out_path: Path):
     ws = wb.active
     ws.title = "File Catalog"
 
-    headers = ["No.", "Path", "Name", "Folder"]
+    headers = ["No.", "Name (No Ext)"]
     ws.append(headers)
     for cell in ws[1]:
         cell.font = Font(bold=True)
         cell.alignment = Alignment(horizontal="left")
 
-    for idx, (rel_path, name, folder) in enumerate(rows, start=1):
-        ws.append([idx, rel_path, name, folder])
+    for idx, (name,) in enumerate(rows, start=1):
+        ws.append([idx, name])
 
     ws.column_dimensions["A"].width = 6
-    ws.column_dimensions["B"].width = 80
-    ws.column_dimensions["C"].width = 40
-    ws.column_dimensions["D"].width = 40
+    ws.column_dimensions["B"].width = 60
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
 
 
-def build_docx(rows, out_path: Path, root: Path):
+def build_docx(rows, out_path: Path, root: Path, title: str | None = None):
     from docx import Document
-    from docx.shared import Inches
+    from docx.oxml.ns import qn
+    from docx.shared import Pt
 
     doc = Document()
     doc.add_heading("File Catalog", level=1)
 
-    doc.add_paragraph(
-        f"Root: {root.resolve()}\n"
-        f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        f"Total files: {len(rows)}"
-    )
+    name = title.strip() if title else ""
+    header_lines = []
+    if name:
+        header_lines.append(f"目录名称: {name}")
+    header_lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    header_lines.append(f"Total files: {len(rows)}")
+    doc.add_paragraph("\n".join(header_lines))
 
-    table = doc.add_table(rows=1, cols=4)
-    table.style = "Table Grid"
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = "No."
-    hdr_cells[1].text = "Path"
-    hdr_cells[2].text = "Name"
-    hdr_cells[3].text = "Folder"
+    doc.add_paragraph("Files:")
+    if name:
+        title_p = doc.add_paragraph()
+        title_p.alignment = 1  # center
+        title_run = title_p.add_run(name)
+        title_run.font.name = "SimHei"
+        title_run._element.rPr.rFonts.set(qn("w:eastAsia"), "SimHei")
+        title_run.font.size = Pt(16)
 
-    for idx, (rel_path, name, folder) in enumerate(rows, start=1):
-        row_cells = table.add_row().cells
-        row_cells[0].text = str(idx)
-        row_cells[1].text = rel_path
-        row_cells[2].text = name
-        row_cells[3].text = folder
-
-    # Keep columns readable
-    for row in table.rows:
-        row.cells[0].width = Inches(0.6)
-        row.cells[1].width = Inches(4.5)
-        row.cells[2].width = Inches(2.0)
-        row.cells[3].width = Inches(2.0)
+    for (name,) in rows:
+        line = f"{name}"
+        p = doc.add_paragraph(style="List Number")
+        run = p.add_run(line)
+        run.font.name = "FangSong"
+        run._element.rPr.rFonts.set(qn("w:eastAsia"), "FangSong")
+        run.font.size = Pt(14)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     doc.save(out_path)
@@ -127,6 +123,11 @@ def parse_args():
         default=[],
         help="Relative paths to exclude (can be repeated).",
     )
+    p.add_argument(
+        "--title",
+        default="",
+        help="Optional directory name shown in Word header.",
+    )
     return p.parse_args()
 
 
@@ -140,12 +141,12 @@ def main():
 
     file_rows = []
     for rel in iter_files(root, args.include_hidden, exclude):
-        file_rows.append((str(rel), rel.name, str(rel.parent)))
+        file_rows.append((rel.stem,))
 
     file_rows.sort(key=lambda x: x[0].lower())
 
     build_excel(file_rows, Path(args.out_xlsx))
-    build_docx(file_rows, Path(args.out_docx), root)
+    build_docx(file_rows, Path(args.out_docx), root, title=args.title)
 
     print(f"Excel catalog: {Path(args.out_xlsx).resolve()}")
     print(f"Word catalog:  {Path(args.out_docx).resolve()}")

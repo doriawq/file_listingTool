@@ -1,0 +1,7 @@
+.DS_Store
+build/
+dist/
+targets/
+output/
+__pycache__/
+*.pyc
