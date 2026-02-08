@@ -10,15 +10,15 @@ python3 -m pip install -r requirements.txt
 
 ## Usage
 
-From the project root:
+From the project root (defaults to scanning `targets`):
 
 ```
-python3 generate_catalog.py --root .
+python3 generate_catalog.py
 ```
 
-Outputs:
-- `output/spreadsheet/file_catalog.xlsx`
-- `output/doc/file_catalog.docx`
+Outputs (default):
+- `targets/output/spreadsheet/file_catalog.xlsx`
+- `targets/output/doc/file_catalog.docx`
 
 ## Options
 

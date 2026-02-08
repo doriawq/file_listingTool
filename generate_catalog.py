@@ -100,9 +100,22 @@ def build_docx(rows, out_path: Path, root: Path):
 
 def parse_args():
     p = argparse.ArgumentParser(description="Generate file catalogs in Excel and Word formats.")
-    p.add_argument("--root", default=".", help="Root folder to scan (default: current directory).")
-    p.add_argument("--out-xlsx", default="output/spreadsheet/file_catalog.xlsx", help="Output Excel path.")
-    p.add_argument("--out-docx", default="output/doc/file_catalog.docx", help="Output Word path.")
+    default_root = "/Users/Doria/Desktop/AI_projects/file_listingTool/targets"
+    p.add_argument(
+        "--root",
+        default=default_root,
+        help="Root folder to scan (default: targets folder).",
+    )
+    p.add_argument(
+        "--out-xlsx",
+        default=str(Path(default_root) / "output/spreadsheet/file_catalog.xlsx"),
+        help="Output Excel path.",
+    )
+    p.add_argument(
+        "--out-docx",
+        default=str(Path(default_root) / "output/doc/file_catalog.docx"),
+        help="Output Word path.",
+    )
     p.add_argument(
         "--include-hidden",
         action="store_true",
