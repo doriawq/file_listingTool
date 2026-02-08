@@ -23,8 +23,15 @@ jobs:
         run: |
           powershell -ExecutionPolicy Bypass -File file_listingTool_Windows/build_windows_gui.ps1
 
+      - name: List dist
+        run: |
+          dir
+          dir dist
+          dir dist\windows
+          dir dist\windows\*
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: file_listingTool_Windows_GUI
-          path: dist/windows/file_listingTool_Windows_GUI.exe
+          path: dist/**
