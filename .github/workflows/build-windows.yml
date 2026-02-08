@@ -1,0 +1,30 @@
+name: Build Windows GUI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller
+
+      - name: Build GUI exe
+        run: |
+          powershell -ExecutionPolicy Bypass -File file_listingTool_Windows/build_windows_gui.ps1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: file_listingTool_Windows_GUI
+          path: dist/windows/file_listingTool_Windows_GUI.exe
